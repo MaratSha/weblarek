@@ -1,6 +1,4 @@
-import { Buyer } from "../components/Models/Buyer";
 export type ApiPostMethods = "POST" | "PUT" | "DELETE";
-export type TPayment = "card" | "cash";
 
 export interface IApi {
   get<T extends object>(uri: string): Promise<T>;
@@ -21,39 +19,22 @@ export interface IProduct {
 }
 
 export interface IBuyer {
-  payment: TPayment; // выбранный способ оплаты
-  email: string; // email покупателя
-  phone: string; // телефон покупателя
+  payment: "card" | "cash" | "";
+  email: string; // email Покупателя
+  phone: string; // телефон Покупателя
   address: string; // адрес доставки
 }
 
-export interface IOrder {
-  items: string[]; // список id товаров
-  payment: "card" | "cash";
-  address: string;
-  email: string;
-  phone: string;
+export interface IOrderRequest extends IBuyer {
+  total: number;
+  items: string[];
+}
+
+export interface IOrderResponse {
+  id: string;
   total: number;
 }
 
-export interface CardSelectPayload {
-  id: string;
-}
-
-export interface CartRemovePayload {
-  index: number;
-}
-
-export interface CartRemoveByIdPayload {
-  id: string;
-}
-
-export interface OrderNextPayload {
-  payment: Buyer["payment"];
-  address: string;
-}
-
-export interface OrderConfirmPayload {
-  email: string;
-  phone: string;
+export interface IErrorResponse {
+  error: string;
 }

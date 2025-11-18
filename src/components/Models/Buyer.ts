@@ -1,85 +1,75 @@
-// src/components/Models/Buyer.ts
-import { IBuyer } from "../../types";
+import { IBuyer } from '../../types/index';
 
-/**
- * Класс Buyer — управляет данными покупателя.
- * Отвечает за хранение и изменение данных, их валидацию.
- */
+type TPayment = "card" | "cash" | "";
+
 export class Buyer {
-  private payment: IBuyer["payment"]; // способ оплаты
-  private email: string; // email покупателя
-  private phone: string; // телефон покупателя
-  private address: string; // адрес доставки
+  private payment: TPayment = "";
+  private email: string = "";
+  private phone: string = "";
+  private address: string = "";
 
-  /**
-   * Конструктор класса
-   * @param data - объект с начальными данными покупателя (необязательно)
-   */
-  constructor(data?: IBuyer) {
-    this.payment = data?.payment || "card"; // по умолчанию "карта"
-    this.email = data?.email || "";
-    this.phone = data?.phone || "";
-    this.address = data?.address || "";
+  setPayment(value: TPayment): void {
+    this.payment = value;
   }
 
-  /**
-   * Устанавливает данные покупателя. Можно передавать только поля, которые нужно изменить.
-   * @param data - объект Partial<IBuyer> с полями для изменения
-   */
-  setData(data: Partial<IBuyer>): void {
-    this.payment = data.payment ?? this.payment;
-    this.email = data.email ?? this.email;
-    this.phone = data.phone ?? this.phone;
-    this.address = data.address ?? this.address;
+  setEmail(value: string): void {
+    this.email = value;
   }
 
-  /**
-   * Возвращает все данные покупателя
-   * @returns объект IBuyer с текущими значениями полей
-   */
+  setPhone(value: string): void {
+    this.phone = value;
+  }
+
+  setAddress(value: string): void {
+    this.address = value;
+  }
+
   getData(): IBuyer {
     return {
       payment: this.payment,
       email: this.email,
       phone: this.phone,
-      address: this.address,
+      address: this.address
     };
   }
 
-  /**
-   * Очищает данные покупателя, сбрасывая их к значениям по умолчанию
-   */
-  clear(): void {
-    this.payment = "card";
+  setData(data: Partial<IBuyer>): void {
+    if (data.payment !== undefined) this.payment = data.payment;
+    if (data.email !== undefined) this.email = data.email;
+    if (data.phone !== undefined) this.phone = data.phone;
+    if (data.address !== undefined) this.address = data.address;
+  }
+
+  clearData(): void {
+    this.payment = "";
     this.email = "";
     this.phone = "";
     this.address = "";
   }
 
-  /**
-   * Проверяет валидность каждого поля покупателя
-   * @returns объект с флагами валидности каждого поля
-   */
-  validate(): {
-    payment: boolean;
-    email: boolean;
-    phone: boolean;
-    address: boolean;
-  } {
-    return {
-      payment: this.payment !== undefined,
-      email: this.email.includes("@"),
-      phone: this.phone.length >= 10,
-      address: this.address.length > 5,
-    };
+  validateData(): Record<keyof IBuyer, string> {
+    const errors: Partial<Record<keyof IBuyer, string>> = {};
+
+    if (!this.payment) {
+      errors.payment = 'Не указан способ оплаты';
+    }
+         
+    if (!this.email?.trim()) {
+      errors.email = 'Укажите электронную почту';
+    }
+         
+    if (!this.phone?.trim()) {
+      errors.phone = 'Введите номер телефона';
+    }
+         
+    if (!this.address?.trim()) {
+      errors.address = 'Необходим адрес доставки';
+    }
+
+    return errors as Record<keyof IBuyer, string>;
   }
 
-  /**
-   * Проверяет общую валидность данных покупателя
-   * @returns true, если все поля валидны
-   */
   isValid(): boolean {
-    const v = this.validate();
-    return v.payment && v.email && v.phone && v.address;
+    return Object.keys(this.validateData()).length === 0;
   }
 }
