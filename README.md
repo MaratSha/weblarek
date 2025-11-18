@@ -198,7 +198,7 @@ address: string
 typescript
 const buyerModel = new Buyer();
 buyerModel.setData({
-  email: "andruxa21_sminov52@gmail.com",
+  email: "andruxa21_sminov52@gnail.com",
   phone: "+79036236167"
 });
 console.log("Результат проверки данных:", buyerModel.validateData());

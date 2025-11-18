@@ -40,7 +40,7 @@ console.log("========================================");
 // Тестовые данные покупателя
 const buyer1: IBuyer = {
   payment: "card",
-  email: "andruxa21_sminov52@gmail.com",
+  email: "andruxa21_sminov52@gnail.com",
   phone: "+79036236167",
   address: "ул. Ленина дом 7 пр. 3",
 };
