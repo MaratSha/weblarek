@@ -6,8 +6,9 @@ import { apiProducts } from "./utils/data";
 import { Buyer } from "./components/Models/Buyer";
 import { Basket } from "./components/Models/Basket";
 import { Products } from "./components/Models/Products";
-import { IBuyer } from "./types";
-import { Api, WebLarekApi } from "./components/base/Api";
+import { IBuyer, IProductsResponse } from "./types";
+import { Api } from "./components/base/Api";
+import { WebLarekApi } from "./components/api/wed-api";
 import { API_URL } from "./utils/constants";
 
 // РАБОТА МОДЕЛИ ТОВАРОВ (PRODUCTS)
@@ -101,8 +102,8 @@ async function getProducts() {
     const productsModelApi = new Products();
     console.log("⏳ Загружаем товары с сервера...");
 
-    const products = await localApi.getData();
-    productsModelApi.setItems(products);
+    const products: IProductsResponse = await localApi.getProducts();
+    productsModelApi.setItems(products.items);
 
     console.log("✅ Товары успешно загружены:", productsModelApi.getItems());
   } catch (error) {

@@ -1,8 +1,8 @@
 import { IProduct } from '../../types/index';
 
 export class Products {
-  private items!: IProduct[];
-  private selectedItem!: IProduct;
+  private items: IProduct[] = [];
+  private selectedItem: IProduct | null = null;
 
   constructor() {}
 
@@ -18,7 +18,7 @@ export class Products {
     this.selectedItem = selectedItem;
   }
   
-  getItem(): IProduct {
+  getItem(): IProduct | null{
     return this.selectedItem;
   }
 

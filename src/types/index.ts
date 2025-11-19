@@ -38,3 +38,8 @@ export interface IOrderResponse {
 export interface IErrorResponse {
   error: string;
 }
+
+export interface IProductsResponse {
+  total: number;
+  items: IProduct[];
+}

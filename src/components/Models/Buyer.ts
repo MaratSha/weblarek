@@ -47,7 +47,7 @@ export class Buyer {
     this.address = "";
   }
 
-  validateData(): Record<keyof IBuyer, string> {
+  validateData(): { isValid: boolean; errors: Partial<Record<keyof IBuyer, string>> } {
     const errors: Partial<Record<keyof IBuyer, string>> = {};
 
     if (!this.payment) {
@@ -66,10 +66,13 @@ export class Buyer {
       errors.address = 'Необходим адрес доставки';
     }
 
-    return errors as Record<keyof IBuyer, string>;
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
   }
 
   isValid(): boolean {
-    return Object.keys(this.validateData()).length === 0;
+    return this.validateData().isValid;
   }
 }
