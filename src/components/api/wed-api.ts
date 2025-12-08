@@ -1,17 +1,26 @@
-import { IApi, IProductsResponse, IOrderRequest, IOrderResponse, IErrorResponse } from '../../types';
+import { IApi, IProductsResponse, IOrderRequest, IOrderResponse, IErrorResponse, isOrderResponse } from '../../types';
 
 export class WebLarekApi {  
-    private localApi: IApi;
+    private api: IApi;
 
-    constructor (localApi: IApi) {
-        this.localApi = localApi;
+    constructor(api: IApi) {
+        this.api = api;
     }
 
     getProducts(): Promise<IProductsResponse> {
-        return this.localApi.get('/product/');
+        return this.api.get('/product/');
     }
 
-    postOrder(order: IOrderRequest): Promise<IOrderResponse | IErrorResponse> {
-        return this.localApi.post('/order/', order);
+    async createOrder(order: IOrderRequest): Promise<IOrderResponse> {
+        // Отправляем запрос и получаем ответ
+        const response = await this.api.post<IOrderResponse | IErrorResponse>('/order/', order);
+        
+        // Проверяем, является ли ответ успешным заказом
+        if (isOrderResponse(response)) {
+            return response;
+        } else {
+            // Если это ошибка, выбрасываем исключение
+            throw new Error(response.error);
+        }
     }
 }

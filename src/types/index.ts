@@ -43,3 +43,7 @@ export interface IProductsResponse {
   total: number;
   items: IProduct[];
 }
+
+export function isOrderResponse(response: IOrderResponse | IErrorResponse): response is IOrderResponse {
+  return 'id' in response && 'total' in response;
+}

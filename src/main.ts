@@ -1,115 +1,249 @@
 import "./scss/styles.scss";
 
-// ИМПОРТ МОДУЛЕЙ И ДАННЫХ
-
-import { apiProducts } from "./utils/data";
-import { Buyer } from "./components/Models/Buyer";
-import { Basket } from "./components/Models/Basket";
 import { Products } from "./components/Models/Products";
-import { IBuyer, IProductsResponse } from "./types";
+import { Basket } from "./components/Models/Basket";
+import { Buyer } from "./components/Models/Buyer";
+import { CardCatalog } from "./components/view/cards/CardCatalog";
+import { CardPreview } from "./components/view/cards/CardPreview";
+import { CardBasket } from "./components/view/cards/CardBasket";
 import { Api } from "./components/base/Api";
+import { EventEmitter } from "./components/base/Events";
 import { WebLarekApi } from "./components/api/wed-api";
 import { API_URL } from "./utils/constants";
+import { BasketForm } from "./components/view/forms/Basketform";
+import { Header } from "./components/view/Header";
+import { Gallery } from "./components/view/Gallery";
+import { Modal } from "./components/view/modals/modals";
+import { Success } from "./components/view/forms/Success";
+import { Order } from "./components/view/forms/Order";
+import { Contacts } from "./components/view/forms/Contacts";
+import { cloneTemplate, ensureElement } from "./utils/utils";
+import { IProduct } from "./types";
 
-// РАБОТА МОДЕЛИ ТОВАРОВ (PRODUCTS)
+// Инициализация событий
+const events = new EventEmitter();
 
-console.log("🛍️  ДЕМОНСТРАЦИЯ РАБОТЫ С ТОВАРАМИ");
-console.log("========================================");
+// Модели
+const products = new Products(events);
+const basket = new Basket(events);
+const buyer = new Buyer(events);
 
-const productsModel = new Products();
-// Устанавливаем массив товаров и выбранный товар
-productsModel.setItems(apiProducts.items);
-productsModel.setItem(apiProducts.items[0]);
+// API
+const api = new WebLarekApi(new Api(API_URL));
 
-console.log("📋 Все товары из каталога:", productsModel.getItems());
-console.log(
-  "🔍 Выбранный товар для детального просмотра:",
-  productsModel.getItem()
-);
-console.log(
-  "🎯 Поиск товара по ID:",
-  productsModel.getItemById(apiProducts.items[1].id)
-);
+// Шаблоны
+const templateCatalog = ensureElement<HTMLTemplateElement>("#card-catalog");
+const templatePreview = ensureElement<HTMLTemplateElement>("#card-preview");
+const templateBasketItem = ensureElement<HTMLTemplateElement>("#card-basket");
+const templateBasket = ensureElement<HTMLTemplateElement>("#basket");
+const templateOrder = ensureElement<HTMLTemplateElement>("#order");
+const templateContacts = ensureElement<HTMLTemplateElement>("#contacts");
+const templateSuccess = ensureElement<HTMLTemplateElement>("#success");
 
-console.log("\n");
+// Вью-компоненты
+const header = new Header(events, ensureElement(".header"));
+const gallery = new Gallery(ensureElement(".gallery"));
+const modal = new Modal(events, ensureElement("#modal-container"));
+const basketForm = new BasketForm(cloneTemplate(templateBasket), events);
+const order = new Order(cloneTemplate(templateOrder), events);
+const contacts = new Contacts(cloneTemplate(templateContacts), events);
+const success = new Success(cloneTemplate(templateSuccess), events);
 
-// РАБОТА МОДЕЛИ ПОКУПАТЕЛЯ (BUYER)
+// ============ ОБРАБОТЧИКИ СОБЫТИЙ ============
 
-console.log("👤 ДЕМОНСТРАЦИЯ РАБОТЫ С ДАННЫМИ ПОКУПАТЕЛЯ");
-console.log("========================================");
-
-// Тестовые данные покупателя
-const buyer1: IBuyer = {
-  payment: "card",
-  email: "andruxa21_sminov52@gnail.com",
-  phone: "+79036236167",
-  address: "ул. Ленина дом 7 пр. 3",
-};
-
-const buyerModel = new Buyer();
-// Заполняем данные покупателя
-buyerModel.setData({
-  email: buyer1.email,
-  phone: buyer1.phone,
+// Закрытие модального окна
+events.on("modal:request-close", () => {
+  modal.close();
 });
 
-console.log("💾 Сохраненные данные покупателя:", buyerModel.getData());
-console.log("✅ Проверка корректности данных:", buyerModel.validateData());
+// Каталог
+events.on("catalog:changed", (data: { items: IProduct[] }) => {
+  const cards = data.items.map((product) => {
+    const node = cloneTemplate(templateCatalog);
+    const card = new CardCatalog(node, {
+      onClick: () => events.emit("card:selected", { id: product.id }),
+    });
+    return card.render(product);
+  });
 
-// Очищаем данные и показываем результат
-buyerModel.clearData();
-console.log("🗑️  Данные после очистки:", buyerModel.getData());
-console.log("\n");
+  gallery.items = cards;
+});
 
-// РАБОТА КОРЗИНЫ (BASKET)
+events.on("card:selected", (data: { id: string }) => {
+  products.setPreview(data.id);
+});
 
-console.log("🛒 ДЕМОНСТРАЦИЯ РАБОТЫ КОРЗИНЫ");
-console.log("========================================");
+// Preview товара
+events.on("catalog:preview", () => {
+  const product = products.getPreview();
+  if (!product) return;
 
-const basketModel = new Basket();
+  const node = cloneTemplate(templatePreview);
+  const inCart = basket.contains(product.id);
 
-// Добавляем три товара в корзину
-console.log("➕ Добавляем товары в корзину...");
-basketModel.addItem(apiProducts.items[0]);
-basketModel.addItem(apiProducts.items[1]);
-basketModel.addItem(apiProducts.items[2]);
+  const card = new CardPreview(node, {
+    onClick: () => events.emit("preview:action", { id: product.id }),
+  });
 
-console.log("📦 Содержимое корзины:", basketModel.getBasketItems());
-console.log("🔢 Количество товаров в корзине:", basketModel.getItemsTotal());
-console.log("💰 Общая стоимость корзины:", basketModel.getTotalPrice());
-console.log(
-  "🔍 Проверка наличия товара в корзине:",
-  basketModel.checkItemById(apiProducts.items[0].id)
-);
+  const buttonText =
+    product.price === null ? "Недоступно" : inCart ? "Удалить" : "В корзину";
 
-// Удаляем один товар
-console.log("➖ Удаляем товар из корзины...");
-basketModel.removeItem(apiProducts.items[0]);
-console.log("📦 Корзина после удаления:", basketModel.getBasketItems());
+  const buttonDisabled = product.price === null;
 
-// Очищаем всю корзину
-console.log("🗑️  Очищаем корзину полностью...");
-basketModel.emptyBasket();
-console.log("📦 Корзина после очистки:", basketModel.getBasketItems());
+  modal.content = card.render({
+    ...product,
+    buttonText,
+    buttonDisabled,
+  } as any);
 
-//  РАБОТА С API
+  modal.open();
+});
 
-const baseApi = new Api(API_URL);
-const localApi = new WebLarekApi(baseApi);
+// Добавление/удаление из корзины
+events.on("preview:action", (data: { id: string }) => {
+  const product = products.getById(data.id);
+  if (!product) return;
 
-async function getProducts() {
-  try {
-    const productsModelApi = new Products();
-    console.log("⏳ Загружаем товары с сервера...");
-
-    const products: IProductsResponse = await localApi.getProducts();
-    productsModelApi.setItems(products.items);
-
-    console.log("✅ Товары успешно загружены:", productsModelApi.getItems());
-  } catch (error) {
-    console.error("❌ Ошибка при загрузке товаров:", error);
+  if (basket.contains(data.id)) {
+    basket.remove(data.id);
+  } else {
+    basket.add(product);
   }
+
+  modal.close();
+});
+
+// Обновление корзины
+events.on("cart:changed", () => {
+  header.counter = basket.getCount();
+  renderBasket();
+});
+
+// Открытие корзины
+events.on("basket:open", () => {
+  modal.content = basketForm.render({});
+  modal.open();
+});
+
+events.on("cart:item:remove", (data: { id: string }) => {
+  basket.remove(data.id);
+});
+
+// Оформление заказа
+events.on("cart:checkout", () => {
+  modal.content = order.render({});
+  modal.open();
+});
+
+// Данные покупателя
+events.on("order:payment", (data: { field: string; value: string }) => {
+  buyer.setData({ payment: data.value as any });
+});
+
+events.on("order:address", (data: { field: string; value: string }) => {
+  buyer.setData({ address: data.value });
+});
+
+events.on("order:submit", () => {
+  modal.content = contacts.render({});
+});
+
+events.on("contacts:email", (data: { email: string }) => {
+  buyer.setData({ email: data.email });
+});
+
+events.on("contacts:phone", (data: { phone: string }) => {
+  buyer.setData({ phone: data.phone });
+});
+
+// Валидация формы
+events.on("buyer:changed", (data: any) => {
+  const errors = buyer.validate();
+
+  order.render({
+    payment: data?.payment || "",
+    address: data?.address || "",
+    error: errors.payment || errors.address || "",
+    valid: !errors.payment && !errors.address,
+  } as any);
+
+  contacts.render({
+    email: data?.email || "",
+    phone: data?.phone || "",
+    error: errors.email || errors.phone || "",
+    valid: !errors.email && !errors.phone,
+  } as any);
+});
+
+// Отправка заказа
+events.on("contacts:submit", () => {
+  const buyerData = buyer.getData();
+  const orderData = {
+    ...buyerData,
+    total: basket.getTotal(),
+    items: basket.getItems().map((item) => item.id),
+  };
+
+  api
+    .createOrder(orderData)
+    .then((result) => {
+      basket.clear();
+      buyer.clear();
+
+      modal.content = success.render({
+        description: `Списано ${result.total} синапсов`,
+      } as any);
+
+      modal.open();
+    })
+    .catch((error: Error) => {
+      console.error("Ошибка создания заказа:", error);
+
+      contacts.render({
+        error: error.message || "Не удалось оформить заказ. Попробуйте позже.",
+        valid: false,
+      } as any);
+    });
+});
+
+// Закрытие окна успеха
+events.on("success:close", () => modal.close());
+
+// ============ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ============
+
+// Рендер корзины
+function renderBasket(): void {
+  const items = basket.getItems();
+
+  const cards = items.map((product, index) => {
+    const node = cloneTemplate(templateBasketItem);
+    const card = new CardBasket(node, {
+      onDelete: () => events.emit("cart:item:remove", { id: product.id }),
+    });
+
+    return card.render({
+      ...product,
+      index: index + 1,
+    } as any);
+  });
+
+  basketForm.items = cards;
+  basketForm.total = basket.getTotal();
+  basketForm.empty = cards.length === 0;
 }
 
-// Запускаем загрузку товаров через API
-getProducts();
+// ============ ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ============
+
+// Загрузка товаров
+api
+  .getProducts()
+  .then((list) => {
+    products.setProducts(list.items);
+    events.emit("catalog:changed", { items: list.items });
+  })
+  .catch((error) => {
+    console.error("Ошибка загрузки каталога:", error);
+  });
+
+// Первоначальный рендер корзины
+renderBasket();
