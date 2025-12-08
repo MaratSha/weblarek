@@ -1,60 +1,34 @@
 import { IProduct } from '../../types';
 import { EventEmitter } from '../base/Events';
 
-/**
- * Управление каталогом товаров
- */
 export class Products {
     private items: IProduct[] = [];
-    private previewId: string | null = null;
+    private selectedItem: IProduct | null = null;
     private events: EventEmitter;
 
     constructor(events: EventEmitter) {
         this.events = events;
     }
 
-    // ============ ОСНОВНЫЕ МЕТОДЫ ============
-
-    setProducts(items: IProduct[]): void {
+    setItems(items: IProduct[]): void {
         this.items = [...items];
-        this.emitCatalogChanged();
+        this.events.emit('catalog:changed');
     }
 
-    setPreview(id: string): void {
-        this.previewId = id;
-        this.events.emit('catalog:preview');
-    }
-
-    getPreview(): IProduct | null {
-        if (!this.previewId) return null;
-        return this.items.find(item => item.id === this.previewId) || null;
-    }
-
-    getById(id: string): IProduct | undefined {
-        return this.items.find(item => item.id === id);
-    }
-
-    getAll(): IProduct[] {
+    getItems(): IProduct[] {
         return [...this.items];
     }
 
-    // ============ УТИЛИТЫ ============
-
-    getCount(): number {
-        return this.items.length;
+    setItem(selectedItem: IProduct): void {
+        this.selectedItem = selectedItem;
+        this.events.emit('catalog:preview', { selectedItem });
     }
 
-    exists(id: string): boolean {
-        return this.items.some(item => item.id === id);
+    getItem(): IProduct | null {
+        return this.selectedItem;
     }
 
-    isEmpty(): boolean {
-        return this.items.length === 0;
-    }
-
-    // ============ СЛУЖЕБНЫЕ МЕТОДЫ ============
-
-    private emitCatalogChanged(): void {
-        this.events.emit('catalog:changed', { items: this.getAll() });
+    getItemById(id: string): IProduct | undefined {
+        return this.items.find(item => item.id === id);
     }
 }

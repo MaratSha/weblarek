@@ -1,12 +1,9 @@
-import { Form } from './Form';
-import { ensureElement } from '../../../utils/utils';
-import { IEvents } from '../../base/Events';
+import { Form } from "./Form";
+import { IEvents } from "../../base/Events";
 
 export interface IContacts {
   email: string;
   phone: string;
-  error: string;
-  valid: boolean;
 }
 
 export class Contacts extends Form<IContacts> {
@@ -15,21 +12,25 @@ export class Contacts extends Form<IContacts> {
 
   constructor(container: HTMLFormElement, protected events: IEvents) {
     super(container);
+    this.emailInput = container.querySelector('input[name="email"]')!;  
+    this.phoneInput = container.querySelector('input[name="phone"]')!;
 
-    this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', container);
-    this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', container);
-  }
+    this.container.addEventListener("submit", (event: Event) => {
+      event.preventDefault();
+      this.events.emit("contacts:submit");
+    });
 
-  protected handleSubmit(): void {
-    this.events.emit('contacts:submit');
-  }
+    this.emailInput.addEventListener("input", () => {
+      this.events.emit("contacts:email", {
+        email: this.emailInput.value,
+      });
+    });
 
-  protected handleInput(field: keyof IContacts, value: string): void {
-    if (field === 'email') {
-      this.events.emit('contacts:email', { email: value });
-    } else if (field === 'phone') {
-      this.events.emit('contacts:phone', { phone: value });
-    }
+    this.phoneInput.addEventListener("input", () => {
+      this.events.emit("contacts:phone", {
+        phone: this.phoneInput.value,
+      });
+    });
   }
 
   set email(value: string) {
