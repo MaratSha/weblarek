@@ -1,6 +1,13 @@
 import { Component } from '../../base/Component';
 
-export abstract class Form<T> extends Component<T> {
+// Создаем интерфейс для базовых свойств Form
+export interface IForm {
+    valid?: boolean;
+    errors?: string;
+}
+
+// Делаем класс абстрактным и используем пересечение типов
+export abstract class Form<T> extends Component<IForm & T> {
     protected submitButton: HTMLButtonElement;
     protected errorsElement: HTMLElement;
 

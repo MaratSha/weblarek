@@ -23,9 +23,9 @@ export class Order extends Form<IOrder> {
         });
 
         this.addressInput.addEventListener('input', () => {
-            this.events.emit('order:address', { 
-                field: 'address', 
-                value: this.addressInput.value 
+            this.events.emit('order:address', {  
+                field: 'address',  
+                value: this.addressInput.value  
             });
         });
     }

@@ -37,6 +37,12 @@ export class Modal extends Component<IModal> {
     this.contentElement.appendChild(value);
   }
 
+  render(data: IModal): HTMLElement {
+    super.render(data);
+    this.open();
+    return this.container;
+  }
+
   open(): void {
     this.container.classList.add('modal_active');
   }

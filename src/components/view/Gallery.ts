@@ -1,11 +1,16 @@
 import { Component } from '../base/Component';
 
-export class Gallery extends Component<HTMLElement> {
-  constructor(protected container: HTMLElement) {
-    super(container);
-  }
+// Создаем интерфейс для Gallery
+interface IGallery {
+    items: HTMLElement[];
+}
 
-  set items(items: HTMLElement[]) {
-    this.container.replaceChildren(...items);
-  }
+export class Gallery extends Component<IGallery> {
+    constructor(protected container: HTMLElement) {
+        super(container);
+    }
+
+    set items(items: HTMLElement[]) {
+        this.container.replaceChildren(...items);
+    }
 }

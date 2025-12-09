@@ -52,5 +52,6 @@ export class Buyer {
 
     clearData(): void {
         this.data = { payment: "", email: "", phone: "", address: "" };
+        this.events.emit('buyer:changed', this.data);
     }
 }

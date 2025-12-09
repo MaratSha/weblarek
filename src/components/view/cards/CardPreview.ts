@@ -1,12 +1,18 @@
 import { Card } from './Card';
 import { IProduct } from '../../../types';
-import { CDN_URL } from '../../../utils/constants';
+import { CDN_URL, categoryMap } from '../../../utils/constants';
 
 interface ICardPreviewActions {
     onClick?: () => void;
 }
 
-export class CardPreview extends Card<IProduct> {
+// Создаем тип только с нужными полями
+export type TCardPreview = Pick<IProduct, 'image' | 'category' | 'description'> & {
+    buttonText: string;
+    buttonDisabled: boolean;
+};
+
+export class CardPreview extends Card<TCardPreview> {
     protected imageElement: HTMLImageElement;
     protected categoryElement: HTMLElement;
     protected descriptionElement: HTMLElement;
@@ -18,7 +24,6 @@ export class CardPreview extends Card<IProduct> {
         this.categoryElement = this.container.querySelector('.card__category')!;
         this.descriptionElement = this.container.querySelector('.card__text')!;
         this.buttonElement = this.container.querySelector('.card__button')!;
-        
         this.buttonElement.addEventListener('click', () => {
             actions?.onClick?.();
         });
@@ -30,6 +35,19 @@ export class CardPreview extends Card<IProduct> {
 
     set category(value: string) {
         this.categoryElement.textContent = value;
+        // Добавляем класс для цвета фона
+        this.updateCategoryStyle(value);
+    }
+
+    private updateCategoryStyle(category: string): void {
+        // Сначала сбрасываем все классы
+        this.categoryElement.className = 'card__category';
+        
+        // Добавляем модификатор если есть в categoryMap
+        const categoryInfo = categoryMap[category];
+        if (categoryInfo) {
+            this.categoryElement.classList.add(`card__category_${categoryInfo.mod}`);
+        }
     }
 
     set description(value: string) {

@@ -1,7 +1,12 @@
 import { Card } from './Card';
 import { IProduct } from '../../../types';
 
-export class CardBasket extends Card<IProduct> {
+// Создаем тип только с нужными полями
+export type TCardBasket = Pick<IProduct, 'title' | 'price'> & {
+    index: number;
+};
+
+export class CardBasket extends Card<TCardBasket> {
     protected indexElement: HTMLElement;
     protected deleteButton: HTMLButtonElement;
 

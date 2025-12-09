@@ -1,7 +1,13 @@
-import { IProduct } from '../../../types';
 import { Component } from '../../base/Component';
 
-export class Card<T extends Partial<IProduct>> extends Component<T> {
+// Создаем интерфейс для базовых свойств Card
+export interface ICard {
+    title: string;
+    price: number | null;
+}
+
+// Делаем класс абстрактным и используем пересечение типов
+export abstract class Card<T> extends Component<ICard & T> {
     protected titleElement: HTMLElement;
     protected priceElement: HTMLElement;
 
