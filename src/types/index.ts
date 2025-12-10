@@ -1,5 +1,8 @@
 export type ApiPostMethods = "POST" | "PUT" | "DELETE";
 
+// Добавляем тип TPayment как рекомендовал ревьювер
+export type TPayment = 'cash' | 'card' | '';
+
 export interface IApi {
   get<T extends object>(uri: string): Promise<T>;
   post<T extends object>(
@@ -19,7 +22,8 @@ export interface IProduct {
 }
 
 export interface IBuyer {
-  payment: "card" | "cash" | "";
+  // Используем TPayment вместо строкового литерала
+  payment: TPayment;
   email: string; // email Покупателя
   phone: string; // телефон Покупателя
   address: string; // адрес доставки
@@ -48,29 +52,13 @@ export function isOrderResponse(response: IOrderResponse | IErrorResponse): resp
   return 'id' in response && 'total' in response;
 }
 
-// ============ ДОБАВЛЕННЫЕ ИНТЕРФЕЙСЫ ДЛЯ VIEW ============
+// ============ ИНТЕРФЕЙСЫ ДЛЯ VIEW ============
 
 // Для карточек товаров
 export interface ICardData extends IProduct {
   buttonText?: string;
   buttonDisabled?: boolean;
   index?: number;
-}
-
-// Для формы Order
-export interface IOrderFormData {
-  payment: string;
-  address: string;
-  valid?: boolean;
-  errors?: string;
-}
-
-// Для формы Contacts
-export interface IContactsFormData {
-  email: string;
-  phone: string;
-  valid?: boolean;
-  errors?: string;
 }
 
 // Для компонента Success

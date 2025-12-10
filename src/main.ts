@@ -18,7 +18,7 @@ import { Success } from './components/view/Success';
 import { Order } from './components/view/forms/Order';
 import { Contacts } from './components/view/forms/Contacts';
 import { cloneTemplate, ensureElement } from './utils/utils';
-import { IProduct, IBuyer, ICardData, IOrderFormData, IContactsFormData, ISuccessData } from './types';
+import { IProduct, IBuyer, TPayment } from './types';
 
 // Инициализация событий
 const events = new EventEmitter();
@@ -103,7 +103,7 @@ events.on('catalog:preview', (data: { selectedItem: IProduct }) => {
         ...product,
         buttonText,
         buttonDisabled
-    } as ICardData);
+    });
     
     modal.render({ content: renderedCard });
 });
@@ -145,9 +145,9 @@ events.on('cart:checkout', () => {
     modal.render({ content: order.render({}) });
 });
 
-// Данные покупателя
+// Данные покупателя - ИСПРАВЛЕНИЕ 1: используем тип TPayment вместо any
 events.on('order:payment', (data: { field: string; value: string }) => {
-    buyer.setData({ payment: data.value as any });
+    buyer.setData({ payment: data.value as TPayment });
 });
 
 events.on('order:address', (data: { field: string; value: string }) => {
@@ -166,26 +166,27 @@ events.on('contacts:phone', (data: { phone: string }) => {
     buyer.setData({ phone: data.phone });
 });
 
-// Валидация формы
-events.on('buyer:changed', (data: unknown) => {
-    const buyerData = data as IBuyer;
+// Валидация формы - ИСПРАВЛЕНИЯ 2 и 3: правильный тип для data
+events.on('buyer:changed', (buyerData: IBuyer) => {
     const errors = buyer.validateData();
     
+    // ИСПРАВЛЕНИЕ 4: убираем as IOrderFormData
     order.render({
         payment: buyerData?.payment || '',
         address: buyerData?.address || ''
-    } as IOrderFormData);
+    });
     
     order.valid = !errors.payment && !errors.address;
     order.errors = [
-        errors.payment ?  errors.payment : '',
+        errors.payment ? errors.payment : '',
         errors.address ? errors.address : ''
     ].filter(msg => msg).join(', ');
 
+    // ИСПРАВЛЕНИЕ 4: убираем as IContactsFormData
     contacts.render({
         email: buyerData?.email || '',
         phone: buyerData?.phone || ''
-    } as IContactsFormData);
+    });
     
     contacts.valid = !errors.email && !errors.phone;
     contacts.errors = [
@@ -211,7 +212,7 @@ events.on('contacts:submit', () => {
             modal.render({
                 content: success.render({
                     description: `Списано ${result.total} синапсов`
-                } as ISuccessData)
+                })
             });
         })
         .catch((error: Error) => {
@@ -238,7 +239,7 @@ function renderBasket(): void {
         return card.render({ 
             ...product, 
             index: index + 1 
-        } as ICardData);
+        });
     });
 
     basketView.items = cards;
